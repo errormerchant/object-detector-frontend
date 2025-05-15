@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Upload, ImageIcon, Loader2 } from "lucide-react"
 import NextImage from "next/image"
 import { cn } from "@/lib/utils"
@@ -14,6 +14,7 @@ export default function Home() {
   const [detections, setDetections] = useState([])
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState(null)
+  const fileInputRef = useRef()
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files?.[0]
@@ -59,8 +60,13 @@ export default function Home() {
       const result = await detectObjects(formData)
       setDetections(result)
     } catch (err) {
-      console.error("Error processing image:", err)
-      setError("Failed to process image. Please try again.")
+      let message = err.message || "Failed to process image. Please try again."
+
+      if (message.includes("fetch")) {
+        message = "Image is too large. Please upload an image under 1MB."
+      }
+
+      setError(message)
     } finally {
       setIsProcessing(false)
     }
@@ -85,6 +91,7 @@ export default function Home() {
                 )}
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
+                onClick={() => fileInputRef.current?.click()}
               >
                 {image ? (
                   <div className="relative w-full aspect-video">
@@ -97,14 +104,12 @@ export default function Home() {
                     <p className="text-xs text-muted-foreground">Supports JPG, PNG and WEBP</p>
                   </>
                 )}
-                <input type="file" accept="image/*" className="hidden" id="image-upload" onChange={handleFileChange} />
+                <input type="file" accept="image/*" className="hidden" id="image-upload" onChange={handleFileChange} ref={fileInputRef}/>
               </div>
-              <label htmlFor="image-upload">
-                <Button className="w-full mt-4">
-                  <ImageIcon className="mr-2 h-4 w-4" />
-                  {image ? "Change Image" : "Select Image"}
-                </Button>
-              </label>
+              <Button className="w-full mt-4" onClick={() => fileInputRef.current?.click()}>
+                <ImageIcon className="mr-2 h-4 w-4" />
+                {image ? "Change Image" : "Select Image"}
+              </Button>
             </CardContent>
             <CardFooter>
               <Button onClick={processImage} disabled={!image || isProcessing} className="w-full">
