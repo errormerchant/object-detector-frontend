@@ -7,7 +7,7 @@ A full-stack object detection web app that lets users upload images and returns 
 
 - Upload images through a modern drag-and-drop interface
 - Automatically compresses large images client-side
-- Sends images to a Flask backend with a pre-trained Faster R-CNN model
+- Sends images to a Flask backend with a Faster R-CNN model
 - Displays detected objects with bounding boxes
 - Funny fallback messages when nothing is detected
 - Responsive dark-mode UI with a clean card layout
