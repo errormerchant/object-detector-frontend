@@ -16,6 +16,34 @@ export default function Home() {
   const [error, setError] = useState(null)
   const fileInputRef = useRef()
 
+  async function compressImage(file, maxWidth = 1024, quality = 0.7) {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement("canvas")
+        const scaleFactor = maxWidth / img.width
+
+        canvas.width = Math.min(maxWidth, img.width)
+        canvas.height = img.height * scaleFactor
+
+        const ctx = canvas.getContext("2d")
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return reject(new Error("Compression failed."))
+            const compressedFile = new File([blob], file.name, { type: "image/jpeg" })
+            resolve(compressedFile)
+          },
+          "image/jpeg",
+          quality
+        )
+      }
+      img.onerror = reject
+      img.src = URL.createObjectURL(file)
+    })
+  }
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files?.[0]
     if (selectedFile) {
@@ -47,34 +75,45 @@ export default function Home() {
     e.preventDefault()
   }
 
-  const processImage = async () => {
-    if (!file) return
+const processImage = async () => {
+  if (!file) return
 
-    try {
-      setIsProcessing(true)
-      setError(null)
+  try {
+    setIsProcessing(true)
+    setError(null)
 
-      const formData = new FormData()
-      formData.append("file", file)
+    let finalFile = file
 
-      const result = await detectObjects(formData)
-      setDetections(result)
-    } catch (err) {
-      let message = err.message || "Failed to process image. Please try again."
-
-      if (message.includes("fetch")) {
-        message = "Image is too large. Please upload an image under 1MB."
+    // Compress if over 1MB
+    if (file.size > 1_000_000) {
+      try {
+        finalFile = await compressImage(file)
+        console.log("Compressed image size:", (finalFile.size / 1024).toFixed(2), "KB")
+      } catch (err) {
+        setError("Image is too large and compression failed.")
+        return
       }
-
-      setError(message)
-    } finally {
-      setIsProcessing(false)
     }
+
+    setImage(URL.createObjectURL(finalFile))
+    setFile(finalFile)
+
+    // Create form data from the final (compressed or original) file
+    const formData = new FormData()
+    formData.append("file", finalFile)
+
+    const result = await detectObjects(formData)
+    setDetections(result)
+  } catch (err) {
+    setError(err.message || "Failed to process image. Please try again.")
+  } finally {
+    setIsProcessing(false)
   }
+}
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-4 md:p-24">
-      <div className="w-full max-w-5xl">
+    <main className="min-h-screen bg-cover bg-center py-12 px-4 flex items-center justify-center" style={{backgroundImage: "url('/background.png')"}}>
+      <div className="w-full max-w-5xl px-12 py-16 shadow-md bg-opacity-0 text-white space-y-6">
         <h1 className="text-3xl font-bold mb-8 text-center">Object Detection App</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
