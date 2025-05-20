@@ -29,14 +29,16 @@ A full-stack object detection web app that lets users upload images and returns 
 - Frontend: Vercel
 - Backend: Railway (or Render/Fly.io fallback)
 
+## 🖼️ Demo
+
+![Detection Results](./public/res.png)
+
+[🔗 Live Demo](https://object-detector-frontend-two.vercel.app/)
 
 ## 🔧 Future Improvements
 
 - Add object filtering or confidence threshold control
 - Add model selection (YOLOv8, SSD, etc.)
 
-## 🖼️ Demo
-
-![Detection Results](./public/res.png)
-
-[🔗 Live Demo](https://object-detector-frontend-two.vercel.app/)
+## ⚠️ Limitations
+Smarter models work great locally, but throw tantrums when deployed. Had to settle for a lighter one to keep things running smoothly (even if it occasionally calls a dog a horse 🐴).
